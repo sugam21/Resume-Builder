@@ -1,0 +1,8 @@
+flask
+numpy
+pandas
+nltk
+sklearn
+gensim
+simpletransformers
+gunicorn
