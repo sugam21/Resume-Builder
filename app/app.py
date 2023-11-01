@@ -10,7 +10,9 @@ from scipy.spatial.distance import cosine
 from sklearn.pipeline import Pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
 from gensim.models import KeyedVectors  # For loading saved gensim model
-from simpletransformers.question_answering import QuestionAnsweringModel  # This is for model
+from simpletransformers.question_answering import (
+    QuestionAnsweringModel,
+)  # This is for model
 
 # --------------------------------------------------------- BEFORE HAND CLASSES AND FUNCTIONS ----------------------------
 
@@ -27,7 +29,7 @@ context_data = data_dir + "context_data.csv"
 
 
 # ----------------------------------------------------------------
-########➡️➡️➡️➡️➡️ PREPROCESSING PIPELINE
+# ➡️➡️➡️➡️➡️ PREPROCESSING PIPELINE
 # ----------------------------------------------------------------
 # ----------------------------------------------------------------
 
@@ -49,7 +51,7 @@ class RemovePunctuation(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, text):
-        exclude = '!"#$%&\'()*+./:;<=>?@[\\]^`{|}~'
+        exclude = "!\"#$%&'()*+./:;<=>?@[\\]^`{|}~"
         text = text.translate(str.maketrans("", "", exclude))
         text = re.sub(",", " ", text)
         text = re.sub(r"\(", " ", text)
@@ -65,7 +67,7 @@ class RemoveAccent(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, text):
-        accent_letters = 'éàáñüãèìöäøõîûçôšâ'
+        accent_letters = "éàáñüãèìöäøõîûçôšâ"
         text = text.translate(str.maketrans("", "", accent_letters))
 
         return text
@@ -89,33 +91,35 @@ class RemoveStopWords(BaseEstimator, TransformerMixin):
         return text
 
 
-pipe = Pipeline([
-    ("lower", LowerCasing()),
-    ("remove punctuation", RemovePunctuation()),
-    ("remove accent", RemoveAccent()),
-    ("remove stopwords", RemoveStopWords())
-])
+pipe = Pipeline(
+    [
+        ("lower", LowerCasing()),
+        ("remove punctuation", RemovePunctuation()),
+        ("remove accent", RemoveAccent()),
+        ("remove stopwords", RemoveStopWords()),
+    ]
+)
 
 
 # ---------------------------------------------------------------------------
-#####➡️➡️➡️➡️➡️ WORD2VEC IMPORT
+# ➡️➡️➡️➡️➡️ WORD2VEC IMPORT
 # ----------------------------------------------------------------
 # ----------------------------------------------------------------
 
 
-class Word2Vec():
+class Word2Vec:
     """
-  The class is responsible for importing the saved gensim word2vec 200 dim vector and use it to encode the question
+    The class is responsible for importing the saved gensim word2vec 200 dim vector and use it to encode the question
 
-  """
+    """
 
     def __init__(self, path):
         self.wv = KeyedVectors.load(path)
 
     def sent_vec(self, sent):
         """
-    Creates a vector from sentence
-    """
+        Creates a vector from sentence
+        """
         vector_size = self.wv.vector_size
         wv_res = np.zeros(vector_size)
         ctr = 1
@@ -131,29 +135,28 @@ word_2_vec_model_dir = model_dir_ + "word2vec_model"
 
 
 # ---------------------------------------------------------------------------
-###➡️➡️➡️➡️➡️ DATA LOADER
+# ➡️➡️➡️➡️➡️ DATA LOADER
 # ----------------------------------------------------------------
 # ----------------------------------------------------------------
 
 
-class LoadData():
-
+class LoadData:
     def __init__(self, embedding_path="", context_path=""):
         self.embedding_path = embedding_path
         self.context_path = context_path
 
     def load_context_embeddings(self):
-        ####### This will load premade embeddings
+        # This will load premade embeddings
         with open(self.embedding_path, "rb") as file:
             vec = pickle.load(file)
 
-        ### Convert into dataframe
+        # Convert into dataframe
         vec = pd.DataFrame(vec)
 
         return vec
 
     def load_context_data(self):
-        #### This will load the original data for context
+        # This will load the original data for context
         og_context = pd.read_csv(self.context_path)
         return og_context
 
@@ -163,7 +166,7 @@ context_path = data_dir + "context_data.csv"
 
 
 # ---------------------------------------------------------------------------
-####➡️➡️➡️➡️➡️ FIND COSINE SIMILARITY
+# ➡️➡️➡️➡️➡️ FIND COSINE SIMILARITY
 # ----------------------------------------------------------------
 # ----------------------------------------------------------------
 
@@ -175,14 +178,17 @@ def find_cosine_similarity(vec, question_vector):
     Gives the index whose cosine similarity is maximum
     """
     vec["cosine_similarity"] = vec["context"].apply(
-        lambda x: 1 - cosine(x, question_vector))  # Applies the cosine similarity and store in a new column
-    index_max_similarity = vec["cosine_similarity"].argmax()  # Finds the index with maximum cosine similarity
+        lambda x: 1 - cosine(x, question_vector)
+    )  # Applies the cosine similarity and store in a new column
+    index_max_similarity = vec[
+        "cosine_similarity"
+    ].argmax()  # Finds the index with maximum cosine similarity
 
     return index_max_similarity
 
 
 # --------------------------------------------------------------------
-####➡️➡️➡️➡️➡️ FORMAT DATA
+# ➡️➡️➡️➡️➡️ FORMAT DATA
 # ----------------------------------------------------------------
 # ----------------------------------------------------------------
 
@@ -197,20 +203,23 @@ def format_data(context_sentence, question):
                     "id": "0",
                 }
             ],
-        }]
+        }
+    ]
 
     return to_predict
 
 
 # -----------------------------------------------------------------------
-#### ➡️➡️➡️➡️➡️ MODEL
+# ➡️➡️➡️➡️➡️ MODEL
 # ----------------------------------------------------------------
 # ----------------------------------------------------------------
 
 
-class Model():
+class Model:
     def __init__(self):
-        self.model = QuestionAnsweringModel("bert", model + "/best_model/", use_cuda=False)
+        self.model = QuestionAnsweringModel(
+            "bert", model + "/best_model/", use_cuda=False
+        )
 
     def predict(self, to_predict):
         predictions, raw_input = self.model.predict(to_predict)
@@ -238,16 +247,24 @@ def predict():
     # This will accept the question written in the chatbot
     message = request.form.get("message")
 
-    processed_question = pipe.fit_transform(message)  # Preprocesses the question
-    question_vector = Word2Vec(word_2_vec_model_dir).sent_vec(processed_question)  # Create embedding of question
-    ld = LoadData(embedding_path=embedding_path,
-                  context_path=context_path)  # Loading the pre-made context embeddings and context data
+    processed_question = pipe.fit_transform(
+        message)  # Preprocesses the question
+    question_vector = Word2Vec(word_2_vec_model_dir).sent_vec(
+        processed_question
+    )  # Create embedding of question
+    ld = LoadData(
+        embedding_path=embedding_path, context_path=context_path
+    )  # Loading the pre-made context embeddings and context data
     vec = ld.load_context_embeddings()
     context_data = ld.load_context_data()
-    index_max_similarity = find_cosine_similarity(vec, question_vector)  # Find the index of maximum cosine similarity
+    index_max_similarity = find_cosine_similarity(
+        vec, question_vector
+    )  # Find the index of maximum cosine similarity
 
     # Fetching the context from the original context data
-    context = context_data.iloc[index_max_similarity, 0]  # This will have context of the question stored to it
+    context = context_data.iloc[
+        index_max_similarity, 0
+    ]  # This will have context of the question stored to it
 
     to_predict = format_data(context, message)
     # Formatting the original question and context.
