@@ -1,6 +1,7 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, url_for
 import numpy as np
 import pandas as pd
+import random
 import re
 from typing import List
 import time
@@ -190,7 +191,6 @@ def find_cosine_similarity(vec, question_vector):
 # --------------------------------------------------------------------
 # ➡️➡️➡️➡️➡️ FORMAT DATA
 # ----------------------------------------------------------------
-# ----------------------------------------------------------------
 
 
 def format_data(context_sentence, question):
@@ -236,16 +236,37 @@ class Model:
 app = Flask(__name__)
 
 
+# This is the home page of our site
+
+
+# When we click to the start chat button it should lead
+# to the chatbot page
+
+
 @app.route("/")
-def home():
-    return "Hello World"
+def chatbot():
+    sample_query = [
+        "What is experience required for WLAN Device Driver Development Engineer - Linux post in Strivex Consulting Pvt Ltd company?",
+        "What is experience required for Senior Developer (retail POS Development) post in Careernet Technologies Pvt Ltd hiring for Senior Developer (retail POS Development) company?",
+        "What is role for WLAN Device Driver Development Engineer - Linux post in Strivex Consulting Pvt Ltd company?",
+        "What is role for Senior Manager,deputy General Manager- Digital Marketing post in HumanKonnect company?",
+        "What is role for Big Data Test Engineer post in Bob Technologies company?",
+        "What are skills required for Big Data Hadoop Developer post in dynproindia company?",
+        "What are skills required for Marketing Executive-chennai post in Apollo Sugar Clinics Limited company?",
+        "What are skills required for Oracle Corporate Trainer post in Koenig Solutions Ltd company?",
+        "What is experience required for Sales Manager - Bangalore post in O&G SKILLS INDIA PVT LTD company?",
+        "What is experience required for Sr Technical Lead with a Product Based Company post in Confidential company?",
+    ]
+
+    query_to_suggest = random.sample(sample_query, 3)
+    return render_template("index.html", sample=query_to_suggest)
 
 
-# you can get input using 2 methods GET(input through URL) and POST(Input without URL)
+# you can get input using 2 methods GET and POST(Input without URL)
 @app.route("/predict", methods=["POST"])
 def predict():
     # This will accept the question written in the chatbot
-    message = request.form.get("message")
+    message = request.form["message"]
 
     processed_question = pipe.fit_transform(
         message)  # Preprocesses the question

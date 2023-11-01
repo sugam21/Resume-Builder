@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Chatbot Interface</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Poppins:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <!-- For Google Fonts -->
+  </head>
+  <body>
+    <div class="chatbot-container">
+      <h1>Chatbot</h1>
+      <div class="chat-output" id="chat-messages">
+        <!-- Chat messages will be displayed here -->
+      </div>
+      <div class="user-input">
+        <form id="input-form" method="POST" action="/predict">
+          <input
+            type="text"
+            id="message"
+            name="message"
+            placeholder="Type your message..."
+          />
+          <button type="submit">Submit</button>
+          <button id="clear-button">Clear</button>
+        </form>
+      </div>
+      <!-- This section handles the suggested queries -->
+      <div class="suggested-queries" id="suggested-queries">
+        <p>Suggested Queries:</p>
+        {%for query in sample %}
+        <ul>
+          <li class="suggested-query">{{query}}</li>
+        </ul>
+        {% endfor %}
+        <!-- <li class="suggested-query">Suggested Query 2</li> -->
+        <!-- <li class="suggested-query">Suggested Query 3</li> -->
+      </div>
+    </div>
+
+    <script>
+      const chatMessages = document.getElementById("chat-messages");
+      const inputForm = document.getElementById("input-form");
+      const clearButton = document.getElementById("clear-button");
+      const suggestedQueries = document.getElementById("suggested-queries");
+
+      inputForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const messageInput = document.getElementById("message");
+        const message = messageInput.value.trim();
+
+        if (message === "") {
+          return;
+        }
+
+        displayMessage(message, "user");
+        messageInput.value = "";
+
+        const response = await fetch("/predict", {
+          method: "POST",
+          body: new URLSearchParams({ message }),
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          displayMessage(result.answer, "bot");
+        } else {
+          displayMessage(
+            "An error occurred while communicating with the server.",
+            "error",
+          );
+        }
+      });
+
+      clearButton.addEventListener("click", () => {
+        chatMessages.innerHTML = ""; // Clear the chat content
+      });
+
+      suggestedQueries.addEventListener("click", (event) => {
+        if (event.target.classList.contains("suggested-query")) {
+          const clickedQuery = event.target.textContent;
+          const messageInput = document.getElementById("message");
+          messageInput.value = clickedQuery; // Set the clicked query as the input
+        }
+      });
+
+      function displayMessage(text, type) {
+        const messageContainer = document.createElement("div");
+        messageContainer.classList.add("message-container");
+
+        const messageElement = document.createElement("div");
+        messageElement.textContent = text;
+
+        if (type === "user") {
+          messageContainer.classList.add("user-bubble");
+          messageElement.classList.add("user-message");
+        } else {
+          messageContainer.classList.add("bot-bubble");
+          messageElement.classList.add("bot-message");
+        }
+
+        messageContainer.appendChild(messageElement);
+        chatMessages.appendChild(messageContainer);
+
+        // Scroll to the bottom of the chat
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    </script>
+  </body>
+</html>
