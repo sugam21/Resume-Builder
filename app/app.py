@@ -241,10 +241,13 @@ app = Flask(__name__)
 
 # When we click to the start chat button it should lead
 # to the chatbot page
+def get_sample_query():
+    """
+    This function returns randomly sampled queries 3 to be specific and pass it to the html
 
-
-@app.route("/")
-def chatbot():
+    Returns:
+    query_to_suggest (List) - list of strings
+    """
     sample_query = [
         "What is experience required for WLAN Device Driver Development Engineer - Linux post in Strivex Consulting Pvt Ltd company?",
         "What is experience required for Senior Developer (retail POS Development) post in Careernet Technologies Pvt Ltd hiring for Senior Developer (retail POS Development) company?",
@@ -256,9 +259,23 @@ def chatbot():
         "What are skills required for Oracle Corporate Trainer post in Koenig Solutions Ltd company?",
         "What is experience required for Sales Manager - Bangalore post in O&G SKILLS INDIA PVT LTD company?",
         "What is experience required for Sr Technical Lead with a Product Based Company post in Confidential company?",
+        "What is experience required for Bench Sales Recruiter post in Confidential company?",
+        "What is experience required for HR Operation Lead post in Confidential company?",
+        "What is experience required for Sr FPGA Engineer - Bangalore post in Gobrah Management Consulting Services Pvt Ltd hiring for a reputed Semiconductor company (800+ Employees) company?",
+        "What are skills required for Currently we have an Immediate Requirement for SAP SD Consultant post in Marlabs Software Pvt Ltd company?",
+        "What is salary provided by Covalense Technologies Private Limited company for Java - SSE , Technical Lead post?",
+        "What is salary provided by Bharath Infra Exports and Imports Ltd company for Sales Executive for Tiles post?",
     ]
 
     query_to_suggest = random.sample(sample_query, 3)
+    return query_to_suggest
+
+
+@app.route("/")
+def chatbot():
+    query_to_suggest = (
+        get_sample_query()
+    )  # Calls the query function to get randomly sampled strings
     return render_template("index.html", sample=query_to_suggest)
 
 
