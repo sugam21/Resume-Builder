@@ -103,12 +103,12 @@ pipe = Pipeline(
 
 
 # ---------------------------------------------------------------------------
-# ➡️➡️➡️➡️➡️ WORD2VEC IMPORT
+# ➡️➡️➡️➡️➡️ GLOVE IMPORT
 # ----------------------------------------------------------------
 # ----------------------------------------------------------------
 
 
-class Word2Vec:
+class Glove:
     """
     The class is responsible for importing the saved gensim word2vec 200 dim vector and use it to encode the question
 
@@ -132,7 +132,7 @@ class Word2Vec:
         return wv_res
 
 
-word_2_vec_model_dir = model_dir_ + "word2vec_model"
+word_2_vec_model_dir = model_dir_ + "glove_model"
 
 
 # ---------------------------------------------------------------------------
@@ -162,7 +162,7 @@ class LoadData:
         return og_context
 
 
-embedding_path = data_dir + "word2vec_encoding.pkl"
+embedding_path = model_dir_ + "glove_encoding.pkl"
 context_path = data_dir + "context_data.csv"
 
 
@@ -287,7 +287,7 @@ def predict():
 
     processed_question = pipe.fit_transform(
         message)  # Preprocesses the question
-    question_vector = Word2Vec(word_2_vec_model_dir).sent_vec(
+    question_vector = Glove(word_2_vec_model_dir).sent_vec(
         processed_question
     )  # Create embedding of question
     ld = LoadData(
